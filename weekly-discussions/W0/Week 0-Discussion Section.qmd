@@ -1,0 +1,45 @@
+```{r}
+packages <- c("here", "janitor", "tidyverse", "sf", "terra", "tmap", "spData", "spDataLarge", "geodata", "kableExtra", "viridisLite")
+installed_packages <- packages %in% rownames(installed.packages())
+
+if (any(installed_packages == FALSE)) {
+  install.packages(packages[!installed_packages])}
+
+library(here)
+library(janitor)
+library(tidyverse)
+library(sf)
+library(kableExtra)
+
+```
+```{r}
+#Read in the gdw.csv file 
+
+gdw_df <- read_csv(here("weekly-discussions/W0/data", "gdw.csv")) |> 
+    clean_names()
+```
+
+```{r}
+# indexing by country name 
+countries_df <- gdw_df[, "country"]
+countries_df
+
+countries_list <- (c(gdw_df["country"]))
+countries_list
+
+```
+
+```{r}
+#Use group_by() and summarise() to find the number of dams by dam type in gdw_df
+
+gdw_df |> 
+    group_by(dam_type) |> 
+    summarize(count=n()) |> 
+    ungroup()
+```
+
+```{r} 
+sub_dam <- gdw_df |> 
+    filter(dam_type == "Dam")
+sub_dam
+```
