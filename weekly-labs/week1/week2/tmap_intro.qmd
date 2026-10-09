@@ -186,7 +186,7 @@ tm_shape(world_elevation, bbox= world_cities)+
 You can also restrict the map extent using an OpenStreetMap tool called Nominatim to automatically generate minimum and maximum coordinates in the x and y directions based on the provided query.
 
 ```{r}
-tm_shape(world_elevation, bbox = "Europe")
+tm_shape(world_elevation,bbox = "Europe") +
   tm_raster(col.scale= tm_scale(values=terrain.colors(8)))
 
 ```
