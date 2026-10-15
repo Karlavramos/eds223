@@ -95,24 +95,24 @@ nz <- spData::nz
 nz_height <- spData::nz_height
 
 #filter for region Canterbury
-canterbury <- nz |> 
-  filter(Name =="Canterbury")
+canterbury <- nz |>
+  filter(Name == "Canterbury")
 ```
 
 ```{r}
 tm_shape(nz) +
   tm_polygons() +
-tm_shape(canterbury)+
-  tm_polygons(fill='darkgrey') +
-tm_shape(nz_height)+
-  tm_dots(fill='red')
+  tm_shape(canterbury) +
+  tm_polygons(fill = 'darkgrey') +
+  tm_shape(nz_height) +
+  tm_dots(fill = 'red')
 ```
 #### Bracket subsetting
 Like attribute subsetting, the command `x[y, ]` (equivalent to `nz_height[canterbury, ]`) subsets features of a target `x` using the contents of a source object `y`. Instead of `y` being a vector of class logical or integer, however, for spatial subsetting both `x` and `y` must be geographic objects. 
 Specifically, objects used for spatial subsetting in this way must have the class `sf` or `sfc`: both `nz` and `nz_height` are geographic vector data frames and have the class `s`f, and the result of the operation returns another `sf` object representing the features in the target `nz_height` object that intersect with (in this case high points that are located within) the Canterbury region.
 
 ```{r}
-#subset nz_height for just the features that incersect canterbury 
+#subset nz_height for just the features that incersect canterbury
 c_height1 <- nz_height[canterbury, ]
 ```
 
@@ -123,7 +123,7 @@ By default bracket subsetting will filter to features in `x` that intersect feat
 c_height_disjoint <- nz_height[canterbury, , op = st_disjoint]
 
 # Checj theat intersect is the opposite of fdisjoint
-nrow(c_height1)+ nrow(c_height_disjoint) == nrow(nz_height)
+nrow(c_height1) + nrow(c_height_disjoint) == nrow(nz_height)
 ```
 
 
@@ -133,9 +133,9 @@ The `sf` package also includes the function `st_filter()` which is analogous to 
 The results from this method are the identical to the method above.
 
 ```{r}
-# subset to the rfeatures in canterburry 
-c_height2 <- nz_height |> 
-  st_filter(y=canterbury, .predicate = st_intersects) # define topological
+# subset to the rfeatures in canterburry
+c_height2 <- nz_height |>
+  st_filter(y = canterbury, .predicate = st_intersects) # define topological
 ```
 
 #### Topological operators (`st_intersects()`)
@@ -147,45 +147,43 @@ The output of `st_intersects()` and other topological operators is a sparse geom
 This can be converted into logical vector of `TRUE` and `FALSE` values which can then be used for filtering.
 
 ```{r}
-nz_height_sgbp <- st_intersects(x =nz_height, y= canterbury)
+nz_height_sgbp <- st_intersects(x = nz_height, y = canterbury)
 nz_height_sgbp
 
-# Convert to logical vector 
-nz_height_logical <- lengths(nz_height_sgbp) > 0 
+# Convert to logical vector
+nz_height_logical <- lengths(nz_height_sgbp) > 0
 nz_height_logical # we can subset with T/F not 1/0
 
-c_height_3 <- nz_height[nz_height_logical,]
+c_height_3 <- nz_height[nz_height_logical, ]
 ```
 
 Now let's plot results from all three methods to confirm they gave the same results.
 ```{r}
-map1 <- tm_shape(nz)+
+map1 <- tm_shape(nz) +
   tm_polygons() +
-tm_shape(canterbury)+
-  tm_polygons(fill="darkgrey")+
-tm_shape(c_height1)+
-  tm_dots(fill='red')+
+  tm_shape(canterbury) +
+  tm_polygons(fill = "darkgrey") +
+  tm_shape(c_height1) +
+  tm_dots(fill = 'red') +
   tm_title(text = 'Bracket Subsetting')
 
-map2 <-tm_shape(nz)+
+map2 <- tm_shape(nz) +
   tm_polygons() +
-tm_shape(canterbury)+
-  tm_polygons(fill="darkgrey")+
-tm_shape(c_height2)+
-  tm_dots(fill='red')+
+  tm_shape(canterbury) +
+  tm_polygons(fill = "darkgrey") +
+  tm_shape(c_height2) +
+  tm_dots(fill = 'red') +
   tm_title(text = 'st_filters()')
 
-map3 <- tm_shape(nz)+
+map3 <- tm_shape(nz) +
   tm_polygons() +
-tm_shape(canterbury)+
-  tm_polygons(fill="darkgrey")+
-tm_shape(c_height_3)+
-  tm_dots(fill='red')+
+  tm_shape(canterbury) +
+  tm_polygons(fill = "darkgrey") +
+  tm_shape(c_height_3) +
+  tm_dots(fill = 'red') +
   tm_title(text = 'st_intersects()')
 
-tmap_arrange(map1, map2, map3, nrow=1)
-
-
+tmap_arrange(map1, map2, map3, nrow = 1)
 ```
 
 ### Distance relationships
@@ -194,10 +192,12 @@ The topological relationships we have been discussing are all binary (features e
 
 ```{r}
 # Find the heights within 1k km of canterbury
-nz_height_logical <- st_is_within_distance(nz_height, canterbury, 
-  dist= units::set_units(1000, 'km'), 
+nz_height_logical <- st_is_within_distance(
+  nz_height,
+  canterbury,
+  dist = units::set_units(1000, 'km'),
   sparse = FALSE
-  )
+)
 
 c_height4 <- nz_height[nz_height_logical, ]
 ```
@@ -205,10 +205,10 @@ c_height4 <- nz_height[nz_height_logical, ]
 Now, we should see points appear that do not *intersect* Caterbury, but are within 1000 km.
 ```{r}
 tm_shape(nz) +
-  tm_polygons()+
-tm_shape(canterbury)+
-  tm_fill(fill ='darkgrey')+ # We do not want an extra border so we do not do tm_polygon()
-tm_shape(c_height4)+
+  tm_polygons() +
+  tm_shape(canterbury) +
+  tm_fill(fill = 'darkgrey') + # We do not want an extra border so we do not do tm_polygon()
+  tm_shape(c_height4) +
   tm_dots(fill = 'red')
 ```
 
@@ -224,20 +224,30 @@ Joins are a common way to link different data sources. Up until now, we have bee
 With spatial data, we can join based on the `geometry` columns using topological relationships using the `st_join()` function. By default `st_join()` will join based on geometries that intersect, but can accommodate other topological relationships by changing the `join = ` argument. By default `st_join()` performs left joins, but can perform inner joins by setting `left = FALSE`.
 
 ```{r}
+# Specify join based on geomitireis x within y 
+st_join(x, y, join=st_within)
 
+# Specify an inner join 
+st_join(x,y left=FALSE)
 ```
 
 
 Let's consider the scenario where we would like to know which region each of the highest points is located in. We can left join the `nz` dataset (polygons of NZ's regions) onto the `nz_height` dataset (points of highest points in the county).
 
 ```{r}
+nz_height_left_join <- st_join(nz_height, nz) |>
+  select(id = t50_fid, elevation, region = Name)
 
+head(nz_height_left_join) # If you do not specify it is intersects
 ```
 
 Now we could use this data to summarize the number of highest point in each region!
 
 ```{r}
-
+nz_height_left_join |>
+  group_by(region) |>
+  summarize(n_points = n()) |>
+  st_drop_geometry()
 ```
 
 #### Distance-based joins
@@ -251,50 +261,77 @@ We'll use the following two datasets from the `spData` package:
 In this example, we would like join the `capacity` attribute from the `cycle_hire_osm` dataset to the `cycle_hire` dataset. Unfortunately it appears that the points from the two datasets do not perfectly align.
 
 ```{r}
-
+cycle_hire <- spData::cycle_hire
+cycle_hire_osm <- spData::cycle_hire_osm
 ```
 
 ```{r}
-
-
+# Check whether or not points overlap
+if (any(st_intersects(cycle_hire, cycle_hire_osm, sparse = FALSE))) {
+  print('Points overlap')
+} else {
+  print('Points dont overlap')
+}
 ```
-
-
-
 
 ```{r}
+tmap_mode("view")
 
-
+tm_shape(cycle_hire) +
+  tm_symbols(fill = "red", fill_alpha = 0.2) +
+  tm_shape(cycle_hire_osm) +
+  tm_symbols(fill = "blue", fill_alpha = 0.2)
 ```
-
 
 
 We can join by again using `st_join()`, but this time including a distance threshold using `st_is_within_distance`.
 
 ```{r}
+cycle_hire_join <- st_join(
+  cycle_hire,
+  cycle_hire_osm,
+  st_is_within_distance,
+  dist = units::set_units(20, "m")
+) |>
+  select(id, capacity)
 
+head(cycle_hire_join)
 ```
 
 Let's build some checks to diagnose the output.
 
 ```{r}
-
+if (nrow(cycle_hire) == nrow(cycle_hire_join)) {
+  print("join matches original data dimensions")
+} else {
+  warning("join does not match orginal data dimensions")
+  print(paste("cycle_hire has", nrow(cycle_hire), "rows"))
+  print(paste("cycle_hire_join has", nrow(cycle_hire_join), "rows"))
+}
 ```
 
 Note that the joined result has more rows than the target data. This is because some of the cycle hire stations in `cycle_hire` have multiple matches in `cycle_hire_osm`. Depending on your project, you would need to think about how to resolve this. In this case, we can aggregate the values for the overlapping points by taking the mean.
 
 ```{r}
-
+# Aggregate values for a single point in cycle hire
+cycle_hire_join <- cycle_hire_join |>
+  group_by(id) |>
+  summarise(capacity = mean(capacity))
 ```
 
 
 Check again to see that there is now no overlap. Each id that originally had multiple bikes iwthin 20 km, now has a single average capacity. 
 
 ```{r}
-
+# Check results
+if (nrow(cycle_hire) == nrow(cycle_hire_join)) {
+  print("join matches original data dimensions")
+} else {
+  warning("join does not match orginal data dimensions")
+  print(paste("cycle_hire has", nrow(cycle_hire), "rows"))
+  print(paste("cycle_hire_join has", nrow(cycle_hire_join), "rows"))
+}
 ```
-
-
 
 
 ### 4. Spatial aggregation
@@ -306,7 +343,11 @@ Let's consider the example where we would like to make a map of the mean elevati
 The first approach is by leveraging `st_join()` again. But in this example, we want the `nz` object to be the target to maintain the geometries we need.
 
 ```{r}
+tmap_mode("plot") # change out of interactive mode
 
+nz_elevation_join <- st_join(x = nz, y = nz_height) |>
+  group_by(Name) |>
+  summarise(elevation = mean(elevation, na.rm = TRUE))
 ```
 
 The second approah uses the `aggregate()` function. Although it doesn't follow the `dplyr` piping convention we're used to, `aggregate()` will come in handy later, so it's nice to see how it works.
@@ -314,12 +355,26 @@ The second approah uses the `aggregate()` function. Although it doesn't follow t
 The syntax looks slightly different, in this case the argument `x` is the data we would like to aggregate (`nz_height`) and the `by` argument specifies the geometry that you would like to group by. The `FUN` argument defines the function that you would like to use to aggregate, in this case `mean`.
 
 ```{r}
+nz_elevation_agg <- aggregate(x = nz_height, by = nz, FUN = mean) # taking the average of every column
 ```
 
 
 ```{r}
+map1 <- tm_shape(nz_elevation_agg) +
+  tm_polygons(
+    fill = "elevation",
+    fill.legend = tm_legend(title = "Mean elevation (meters)")
+  ) +
+  tm_title(text = "group_by()")
 
+map2 <- tm_shape(nz_elevation_agg) +
+  tm_polygons(
+    fill = "elevation",
+    fill.legend = tm_legend(title = "Mean elevation (meters)")
+  ) +
+  tm_title(text = "aggregate()")
 
+tmap_arrange(map1, map2, nrow = 2)
 ```
 
 
@@ -329,9 +384,19 @@ An important consideration when aggregating spatial objects is that geometries a
 
 However, in some cases the aggregating zones do not share common borders with the target. This is an issue because it's not clear how to aggregate underlying data. Areal interpolation overcomes this issue by transferring values to another using algorithms, including simple area weighted approaches.
 
+EX: Postal codes and census blocks have gaps that need to be filled
 
 ```{r}
+incongruent <- spData::incongruent
+aggregating_zones <- spData::aggregating_zones
 
+tm_shape(incongruent) +
+  tm_polygons(
+    fill = "value",
+    fill.legend = tm_legend(title = "Value (million €)")
+  ) +
+  tm_shape(aggregating_zones) +
+  tm_borders(col = "red", lwd = 2)
 ```
 
 The simplest useful method for this is area weighted spatial interpolation, which transfers values from the `incongruent` object to a new column in `aggregating_zones` in proportion with the area of overlap: the larger the spatial intersection between input and output features, the larger the corresponding value. This is implemented in `st_interpolate_aw()`, as demonstrated in the code chunk below.
@@ -339,7 +404,18 @@ The simplest useful method for this is area weighted spatial interpolation, whic
 Let us assume that the `value` column of `incongruent` refers to total regional income in million Euros. We want to transfer these values from the nine underlying polygons into the two `aggregating_zones` polygons proportionally by area overlap.
 
 ```{r}
+# select just the value to be aggregated
+incongruent_2 <- incongruent |>
+  select(value)
 
+# use area-weighted interpolation to aggregate the "value" attribute
+# extensive = TRUE: for count/sum data (e.g. income, population) -- values are split proportionally by area overlap
+# extensive = FALSE: for rate/density data (e.g. income per capita) -- values are averaged weighted by area overlap
+aggregating_zones_area_weighted <- st_interpolate_aw(
+  x = incongruent_2,
+  aggregating_zones,
+  extensive = TRUE
+)
 ```
 
 
@@ -347,7 +423,23 @@ We can compare the original values with the interpolated result to see how value
 
 
 ```{r}
+map1 <- tm_shape(incongruent) +
+  tm_polygons(
+    fill = "value",
+    fill.legend = tm_legend(title = "Value (million euros)")
+  ) +
+  tm_title(text = "Original (9 polygons)")
 
+map2 <- tm_shape(aggregating_zones_area_weighted) +
+  tm_polygons(
+    fill = "value",
+    fill.legend = tm_legend(title = "Value (million euros)")
+  ) +
+  tm_shape(incongruent) +
+  tm_borders(col = "grey50", lwd = 0.5) +
+  tm_title(text = "Interpolated (2 zones)")
+
+tmap_arrange(map1, map2, nrow = 1)
 ```
 
 
@@ -362,32 +454,91 @@ In this section, we will explore operations that change the geometries directly.
 
 ### Geometry unions
 
-We may come across situations where we would like to summarize data across several spatial units. For example, summarizing the population across states within regions of the US. Based on our experience with tabular data, we can summarize attributes by using `group_by() %>% summarize()`. Alternatively we can use the `aggregate()` function. So far this should look familiar, but if plot the outputs we notice that these functions have also aggregated the underlying geometries.
+We may come across situations where we would like to summarize data across several spatial units. For example, summarizing the population across states within regions of the US. 
+
+Based on our experience with tabular data, we can summarize attributes by using `group_by() %>% summarize()`. Alternatively we can use the `aggregate()` function. So far this should look familiar, but if plot the outputs we notice that these functions have also aggregated the underlying geometries.
 
 ```{r}
 #| message: false
+us_states <- spData::us_states
 
+# Summarize total population in each region
+
+regions1 <- us_states |>
+  group_by(REGION) |>
+  summarise(population = sum(total_pop_15, na.rm = TRUE))
+
+
+# ALternative approach
+
+regions2 <- aggregate(
+  x = us_states[, "total_pop_15"], #data to aggregate
+  by = list(us_states$REGION), # attribute to aggregate by
+  FUN = sum,
+  na.rm = TRUE
+)
 ```
 
 ```{r}
 #| code-fold: true
 #| message: false
 #| warning: false
+map1 <- tm_shape(us_states) +
+  tm_polygons(
+    fill = "total_pop_15",
+    fill.legend = tm_legend("Total population")
+  ) +
+  tm_title(text = "US States")
 
+map2 <- tm_shape(regions1) +
+  tm_polygons(
+    fill = "population",
+    fill.legend = tm_legend("Total population")
+  ) +
+  tm_title(text = "group_by()")
 
+map3 <- tm_shape(regions2) +
+  tm_polygons(
+    fill = "total_pop_15",
+    fill.legend = tm_legend("Total population")
+  ) +
+  tm_title(text = "aggregate()")
+
+tmap_arrange(map1, map2, map3, nrow = 1)
 ```
 
 What's going on here? Behind the scenes, R is using `st_union()` to combine geometries within each group. We can also use `st_union()` to combine any pair of spatial objects.
 
 ```{r}
+#combine the geometry of western states
 
+us_west <- us_states[us_states$REGION == "West", ]
+us_west_union <- st_union(us_west)
+
+texas <- us_states[us_states$NAME == "Texas", ]
+texas_union <- st_union(us_west_union, texas)
 ```
 
 ```{r}
 #| message: false
 #| warning: false
+map1 <- tm_shape(us_west) +
+  tm_polygons() +
+  tm_title(text = "western states")
 
+map2 <- tm_shape(us_west_union) +
+  tm_polygons() +
+  tm_title(text = "western states union")
 
+map3 <- tm_shape(texas) +
+  tm_polygons() +
+  tm_title(text = "TX")
+
+map4 <- tm_shape(texas_union) +
+  tm_polygons() +
+  tm_title(text = "TX + western states union")
+
+tmap_arrange(map1, map2, map3, map4, nrow = 2)
 ```
 
 
@@ -396,22 +547,37 @@ What's going on here? Behind the scenes, R is using `st_union()` to combine geom
 ### Buffers
 In the previous section, we saw that we can filter spatial objects based on their proximity using `st_is_within_distance()`. An alternative approach to finding items that are within a set distance would be to expand the `geometry` and then intersect with objects of interest. We can change the size of geometries by creating a "buffer" using `st_buffer()`
 
-In this example, let's create 5 km and 50 km buffers around the Seine.
+In this example, let's create 5 km and 50 km buffers around the Seine river.
 ```{r}
-
+seine_buffer_5km <- st_buffer(seine, dist = units::set_units(5, "km"))
+seine_buffer_50km <- st_buffer(seine, dist = units::set_units(50, "km"))
 ```
 
 ```{r}
+map1 <- tm_shape(seine_buffer_5km) +
+  tm_polygons() +
+  tm_shape(seine) +
+  tm_lines() +
+  tm_title(text = "5km buffer")
 
+map2 <- tm_shape(seine_buffer_50km) +
+  tm_polygons() +
+  tm_shape(seine) +
+  tm_lines() +
+  tm_title(text = "50km buffer")
+
+tmap_arrange(map1, map2, nrow = 1)
 ```
 
 The Seine is actually comprised of multiple geometries. To make things simpler, and more look better on maps, we can combine geometries using our new friend `st_union`!
 
-```{r}
-```
-
-```{r}
-
+``` {r}
+seine_union <- st_union(seine_buffer_50km)
+tm_shape(seine_union) +
+  tm_polygons() +
+  tm_shape(seine) +
+  tm_lines() +
+  tm_title(text = "50km buffer")
 ```
 
 Now let's see an example of using a buffer to find objects within a set distance. Here, we'll repeat our previous example of finding points within 100 km of Canterbury. And check to see if the results match our previous approach!
@@ -438,17 +604,17 @@ To illustrate the concept, we will start with a simple example: two overlapping 
 ```{r}
 x <- st_sfc(st_point(c(0, 1))) %>%
   st_buffer(dist = 1) %>%
-  st_sf() 
+  st_sf()
 
 y <- st_sfc(st_point(c(1, 1))) %>%
   st_buffer(dist = 1) %>%
   st_sf()
 
-intersection <- st_intersection(x, y) 
-difference_x_y <- st_difference(x, y) 
+intersection <- st_intersection(x, y)
+difference_x_y <- st_difference(x, y)
 difference_y_x <- st_difference(y, x)
 union <- st_union(x, y)
-sym_difference <- st_sym_difference(x, y) 
+sym_difference <- st_sym_difference(x, y)
 ```
 
 
@@ -461,38 +627,38 @@ bbox <- st_union(x, y)
 map1 <- tm_shape(x, bbox = bbox) +
   tm_borders(col = "red") +
   tm_shape(y) +
-  tm_borders(col = "blue")+ 
+  tm_borders(col = "blue") +
   tm_layout(meta.margins = c(.2, 0, 0, 0))
 
 map2 <- map1 +
   tm_shape(intersection, bbox = bbox) +
   tm_fill(col = "purple") +
-  tm_title(text = "st_intersection()")+ 
+  tm_title(text = "st_intersection()") +
   tm_layout(meta.margins = c(.2, 0, 0, 0))
 
 map3 <- map1 +
   tm_shape(difference_x_y, bbox = bbox) +
   tm_fill(col = "purple") +
-  tm_title(text = "st_difference(x,y)")+ 
+  tm_title(text = "st_difference(x,y)") +
   tm_layout(meta.margins = c(.2, 0, 0, 0))
 
 
 map4 <- map1 +
   tm_shape(difference_y_x, bbox = bbox) +
   tm_fill(col = "purple") +
-  tm_title(text = "st_difference(y,x)")+
+  tm_title(text = "st_difference(y,x)") +
   tm_layout(meta.margins = c(.2, 0, 0, 0))
 
 map5 <- map1 +
   tm_shape(union, bbox = bbox) +
   tm_fill(col = "purple") +
-  tm_title(text = "st_union()")+ 
+  tm_title(text = "st_union()") +
   tm_layout(meta.margins = c(.2, 0, 0, 0))
 
 map6 <- map1 +
   tm_shape(sym_difference, bbox = bbox) +
   tm_fill(col = "purple") +
-  tm_title(text = "st_sym_diffference()")+ 
+  tm_title(text = "st_sym_diffference()") +
   tm_layout(meta.margins = c(.2, 0, 0, 0))
 
 tmap_arrange(map1, map2, map3, map4, map5, map6, nrow = 2)
@@ -501,7 +667,6 @@ tmap_arrange(map1, map2, map3, map4, map5, map6, nrow = 2)
 Now let's see how we could use these updated geometries for filtering. Extending this simple example, we'll create 100 random points. We want to find the points that intersect both `x` and `y`. We have a few different approaches that all produce the same results.
 
 ```{r}
-
 
 ```
 
@@ -548,36 +713,40 @@ Let's see an example!
 #| echo: false
 #| message: false
 
-attr_layers_df = tibble::tribble(
-  ~Function, ~Description,
-  "st_intersects(x,y)", "tests whether objects intersects",
-  "st_touches(x,y)", "tests whether objects touch", 
-  "st_overlaps(x,y)", "tests whether objects overlap", 
-  "st_contains(x,y)", "tests whether object x contains object y (including boundary)", 
-  "st_contains_properly(x,y)", "tests whether object x contains object y (not including boundary)", 
-  "st_covers(x,y)", "identical to st_contains() when y is a polygon",
-  "st_covered_by(x,y)", "tests whether object y contains object x", 
-  "st_within(x,y)", "tests whether object x is within object y",
-  "st_disjoint(x,y)", "tests whether objects have no intersection",
-  "st_is_within_distance(x,y)", "test whether objects intersect within a certain distance",
-  "st_join(x,y)", "performs spatial join",
-  "st_interpolate_aw(x,y)", "performs area-weighted interpolation of polygons",
-  "aggregate(x,y)", "computes summary statistics for data subsets",
-  "st_union(x,y)", "combines geometries",
-  "st_buffer(x)", "creates polygon that represents all points within a distance threshold of original geometry",
-  "st_intersection(x,y)", "creates polygon of the area shared by x and y",
-  "st_difference(x,y)", "creates polygon of the area of x not in y",
-  "st_sym_difference(x,y)", "creates polygon of the area not shared by x and y",
-  "st_centroid(x)", "creates point(s) of the geographic centroid of a polygon(s)",
-  "st_simplify(x)", "creates a simplified representation of a geometry"
+attr_layers_df <- tibble::tribble(
+  ~Function                    , ~Description                                                                                  ,
+  "st_intersects(x,y)"         , "tests whether objects intersects"                                                            ,
+  "st_touches(x,y)"            , "tests whether objects touch"                                                                 ,
+  "st_overlaps(x,y)"           , "tests whether objects overlap"                                                               ,
+  "st_contains(x,y)"           , "tests whether object x contains object y (including boundary)"                               ,
+  "st_contains_properly(x,y)"  , "tests whether object x contains object y (not including boundary)"                           ,
+  "st_covers(x,y)"             , "identical to st_contains() when y is a polygon"                                              ,
+  "st_covered_by(x,y)"         , "tests whether object y contains object x"                                                    ,
+  "st_within(x,y)"             , "tests whether object x is within object y"                                                   ,
+  "st_disjoint(x,y)"           , "tests whether objects have no intersection"                                                  ,
+  "st_is_within_distance(x,y)" , "test whether objects intersect within a certain distance"                                    ,
+  "st_join(x,y)"               , "performs spatial join"                                                                       ,
+  "st_interpolate_aw(x,y)"     , "performs area-weighted interpolation of polygons"                                            ,
+  "aggregate(x,y)"             , "computes summary statistics for data subsets"                                                ,
+  "st_union(x,y)"              , "combines geometries"                                                                         ,
+  "st_buffer(x)"               , "creates polygon that represents all points within a distance threshold of original geometry" ,
+  "st_intersection(x,y)"       , "creates polygon of the area shared by x and y"                                               ,
+  "st_difference(x,y)"         , "creates polygon of the area of x not in y"                                                   ,
+  "st_sym_difference(x,y)"     , "creates polygon of the area not shared by x and y"                                           ,
+  "st_centroid(x)"             , "creates point(s) of the geographic centroid of a polygon(s)"                                 ,
+  "st_simplify(x)"             , "creates a simplified representation of a geometry"
 )
 options(kableExtra.html.bsTable = TRUE)
-knitr::kable(attr_layers_df, 
-             caption = "Brief description of new functions, check out documentation for more information",
-             booktabs = TRUE) %>%
-  kableExtra::kable_styling("striped",
-                            latex_options = "striped", 
-                            full_width = FALSE) %>% 
+knitr::kable(
+  attr_layers_df,
+  caption = "Brief description of new functions, check out documentation for more information",
+  booktabs = TRUE
+) %>%
+  kableExtra::kable_styling(
+    "striped",
+    latex_options = "striped",
+    full_width = FALSE
+  ) %>%
   kableExtra::column_spec(1, bold = TRUE, monospace = TRUE) %>%
   kableExtra::pack_rows("Spatial data operations", 1, 12) %>%
   kableExtra::pack_rows("Geometry operations", 13, 20)
