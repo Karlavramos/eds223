@@ -16,7 +16,7 @@ editor_options:
 #| echo: false
 #| out-width: "75%"
 #| fig-align: "center"
-knitr::include_graphics("images/Landsat8-First-Light.png")
+#knitr::include_graphics("images/Landsat8-First-Light.png")
 ```
 
 ::: {.gray-text .center-text}
@@ -271,6 +271,29 @@ tm_shape(landsat_scaled) +
   tm_scalebar(position = c("left", "bottom"))
 ```
 
+Let's stretch our true color image:
+
+```{r}
+plotRGB(landsat_scaled, r=3, g=2, b=1, stretch ='lin')
+```
+
+```{r}
+# Gamma correction
+landsat_gamma <- landsat_scaled[[c('red', 'green', 'blue')]]^0.4
+```
+
+```{r}
+# You would never ue gamma for analysis, but for visualization purposes
+names(landsat_gamma) <- c("red", "green", "blue")
+
+tm_shape(landsat_gamma) +
+  tm_rgb(col = tm_vars(c("red", "green", "blue"), multivariate = TRUE),
+         col.scale = tm_scale_rgb(max_color_value = 1)) +
+  tm_title("True color (gamma = 0.4)") +
+  tm_scalebar(position = c("left", "bottom"))
+```
+
+
 ## 6. False color imagery
 
 A **false color composite** assigns satellite bands beyond the visible spectrum (or in a non-standard order) to the display channels, letting us highlight features that are difficult to distinguish in true color.
@@ -293,6 +316,7 @@ tm_shape(landsat_scaled) +
   tm_scalebar(position = c("left", "bottom"))
 ```
 
+The brighter red is more reflective and in this context is denser vegitation. 
 ### SWIR false color (SWIR1, NIR, Green)
 
 Placing the **shortwave infrared band** in the red channel highlights moisture. Water absorbs both SWIR and NIR strongly, so water bodies appear very dark.
