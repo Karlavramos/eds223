@@ -209,7 +209,7 @@ We will load the shapefile identifying locations within our study area as contai
 
 ```{r}
 # read in and transform training data
-training_data <- st_read(here::here( "data", "trainingdata.shp")) %>%
+training_data <- st_read( "data/trainingdata.shp") %>%
   st_transform(., crs = crs(landsat))
 ```
 
@@ -226,10 +226,9 @@ tm_shape(training_data) +
 
 Now, we can extract the spectral reflectance values at each site to create a data frame that relates land cover types to their spectral reflectance.
 
-```{r}
+```{r} 
 # extract reflectance values at training sites
 training_data_values <- terra::extract(landsat, training_data, df = TRUE)
-
 
 # Drop training data geometry
 training_data_attributes <- training_data %>%
@@ -240,10 +239,10 @@ SB_training_data <- left_join(training_data_values, training_data_attributes,
                               by = c("ID" = "id")) %>%
                     mutate(type = as.factor(type)) # convert landcover type to factor
 
-head(SB_training_data)
+head(SB_training_data) # Now contains labels for the types of observations 
 ```
 
-Before training, we'll split the data into **training** (70%) and **testing** (30%) sets. Splitting *within each class* (stratified) ensures all four land cover types are represented in both sets.
+Before training, we'll split the data into **training** (70%) and **testing** (30%) sets. Splitting *within each class* (stratified) ensures all four land cover types are represented in both sets. We use the larger portion of the model to train the model and use the rest to test the model once completed. Splitting the data gives you 'ground truth' for seeing how well your model predicts.
 
 ```{r}
 set.seed(223)
@@ -262,7 +261,7 @@ Next, let's train the decision tree classifier!
 
 To train our decision tree, we first need to establish our model formula (i.e. what our response and predictor variables are). 
 
-- The `rpart()` function implements the [CART algorithm](https://medium.com/geekculture/decision-trees-with-cart-algorithm-7e179acee8ff)
+- The `rpart()` function implements the [CART algorithm](https://medium.com/geekculture/decision-trees-with-cart-algorithm-7e179acee8ff). It can be linear or classification. 
 - The `rpart()` function needs to know the model formula and training data you would like to use
 - Because we are performing a classification, we set `method = "class"`
 - We also set `na.action = na.omit` to remove any pixels with `NA`s from the analysis.
@@ -274,9 +273,9 @@ SB_formula <- type ~ red + green + blue + NIR + SWIR1 + SWIR2
 
 # train decision tree
 SB_decision_tree <- rpart(formula = SB_formula,
-                          data = train_data,
-                          method = "class",
-                          na.action = na.omit)
+                          data = train_data, # training data
+                          method = "class", # performing classification, default is ANOVA
+                          na.action = na.omit) # remove NA pixels
 ```
 
 To understand how our decision tree will classify pixels, we can plot the results! 
@@ -360,6 +359,8 @@ We already processed our landsat data by cropping/masking to our area of interes
 
 The first step is to prepare our data for k-means clustering. Unlike the decision tree which can work directly with raster objects, k-means requires our data to be in a dataframe format. We'll extract the spectral band values for each pixel and then **scale** them. Scaling is critical for k-means because the algorithm measures distances between pixels. If one band has much larger values than another, it would dominate the clustering. Scaling puts all bands on the same scale so each contributes equally.
 
+k-means requires data to be a dataframe.
+
 ```{r}
 
 # Convert raster to dataframe
@@ -369,7 +370,7 @@ landsat_df <- as.data.frame(landsat, xy = TRUE, na.rm = TRUE)
 spectral_data <- landsat_df[, c("blue", "green", "red", "NIR", "SWIR1", "SWIR2")]
 
 # Scale the data
-spectral_data_scaled <- scale(spectral_data)
+spectral_data_scaled <- scale(spectral_data) # Distance based algorithim requires scaling
 ```
 
 
@@ -402,7 +403,6 @@ SB_classification_kmeans <- rast(landsat[[1]])
 values(SB_classification_kmeans) <- NA
 cells <- cellFromXY(SB_classification_kmeans, landsat_df[, c("x", "y")])
 values(SB_classification_kmeans)[cells] <- landsat_df$cluster
-
 
 ```
 
@@ -465,8 +465,8 @@ Now we can plot the results and check out our land cover map!
 kmeans_plot <- tm_shape(SB_classification_kmeans) +
   tm_raster(
     col.scale = tm_scale(
-      values = c("#6A8EAE", "#F2DDA4", "#8DB580", "#7E8987"),
-      labels = c("water", "soil/dead grass", "green vegetation", "urban")
+      values = c("#7E8987", "#F2DDA4", "#8DB580", "#6A8EAE"),
+      labels = c("urban", "soil/dead grass", "green vegetation", "water")
     ),
     col.legend = tm_legend("Landcover type")
   ) +
@@ -474,6 +474,15 @@ kmeans_plot <- tm_shape(SB_classification_kmeans) +
   tm_layout(legend.position = c("left", "bottom"))
 
 kmeans_plot
+```
+
+```{r}
+# Set category labels
+
+levels(SB_classification_kmeans) <- data.frame(
+  ID = 1:4,
+  landcover = c("urban", "soil/dead grass", "green vegetation", "water")
+)
 ```
 
 ## 6. Compare our decision tree and kmeans algorithm classification
